@@ -29,6 +29,8 @@ export class OpenSeadragonCenterPanel extends CenterPanel<
   prevButtonEnabled: boolean = false;
   userData: any;
   showAdjustImageButton: boolean;
+  preserveViewportForQuery: boolean;
+  queryBounds: XYWHFragment | null;
 
   $canvas: JQuery;
   $goHomeButton: JQuery;

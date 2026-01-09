@@ -47,4 +47,6 @@ export class OpenSeadragonExtensionEvents {
   static ZOOM_IN: string = OpenSeadragonExtensionEvents.namespace + "zoomIn";
   static ZOOM_OUT: string = OpenSeadragonExtensionEvents.namespace + "zoomOut";
   static GO_HOME: string = OpenSeadragonExtensionEvents.namespace + "goHome";
+  static CANVAS_CLICK: string =
+    OpenSeadragonExtensionEvents.namespace + "canvasClick"; // added this to handle clicks on the osd canvas
 }
