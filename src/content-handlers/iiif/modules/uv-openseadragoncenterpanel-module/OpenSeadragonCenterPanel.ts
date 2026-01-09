@@ -11,6 +11,7 @@ import OpenSeadragonExtension from "../../extensions/uv-openseadragon-extension/
 import "@openseadragon-imaging/openseadragon-viewerinputhook";
 import { Events } from "../../../../Events";
 import { Config } from "../../extensions/uv-openseadragon-extension/config/Config";
+import { XYWHFragment } from "../uv-shared-module/XYWHFragment";
 
 export class OpenSeadragonCenterPanel extends CenterPanel<
   Config["modules"]["openSeadragonCenterPanel"]

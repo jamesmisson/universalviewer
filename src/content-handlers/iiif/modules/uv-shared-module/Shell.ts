@@ -67,10 +67,10 @@ export class Shell extends BaseView<BaseConfig> {
     this.$overlayPanels.append(this.$leftPanel);
 
     this.$searchLeftPanel = $('<div class="searchLeftPanel"></div>');
-    this.$mainPanel.append(this.$searchLeftPanel);
+    this.$overlayPanels.append(this.$searchLeftPanel);
 
     this.$textRightPanel = $('<div class="textRightPanel"></div>');
-    this.$mainPanel.append(this.$textRightPanel);
+    this.$overlayPanels.append(this.$textRightPanel);
 
     this.$rightPanel = $('<div class="rightPanel"></div>');
     this.$overlayPanels.append(this.$rightPanel);

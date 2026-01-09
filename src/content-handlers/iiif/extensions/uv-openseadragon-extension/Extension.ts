@@ -11,7 +11,6 @@ import { ExternalContentDialogue } from "../../modules/uv-dialogues-module/Exter
 import { FooterPanel as MobileFooterPanel } from "../../modules/uv-osdmobilefooterpanel-module/MobileFooter";
 // import { FooterPanel } from "../../modules/uv-searchfooterpanel-module/FooterPanel";
 import { FooterPanel } from "../../modules/uv-shared-module/FooterPanel";
-import { HelpDialogue } from "../../modules/uv-dialogues-module/HelpDialogue";
 import { IOpenSeadragonExtensionData } from "./IOpenSeadragonExtensionData";
 import { Mode } from "./Mode";
 import { MoreInfoRightPanel } from "../../modules/uv-moreinforightpanel-module/MoreInfoRightPanel";

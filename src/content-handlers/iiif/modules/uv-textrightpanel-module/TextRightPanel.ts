@@ -504,10 +504,9 @@ export class TextRightPanel extends RightPanel<TextRightPanelConfig> {
 
         // Add overlay to OpenSeadragon canvas
         const osRect = new OpenSeadragon.Rect(x, y, width, height);
-        (<OpenSeadragonExtension>this.extension).centerPanel.viewer.addOverlay(
-          div[0],
-          osRect
-        );
+        (<OpenSeadragonExtension>(
+          this.extension
+        )).backgroundPanel.viewer.addOverlay(div[0], osRect);
       }
 
       return line;
