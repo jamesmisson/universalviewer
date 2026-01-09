@@ -7,7 +7,6 @@
   display: none;
   transition: border-color 0.2s;
   color: @text-color;
-  padding-right: 50px;
 
   &.resizing-hover {
     border-left: 2px solid rgba(255, 255, 255, 0.6);
@@ -48,8 +47,21 @@
     overflow: auto;
     color: @text-color;
 
+    // Add padding at the top and bottom that will scroll with content
+    &::before {
+      content: "";
+      display: block;
+      height: 5rem; // Space at the top
+    }
+
+    &::after {
+      content: "";
+      display: block;
+      height: 5rem; // Space at the bottom
+    }
+
     .transcribed-text {
-      padding: 5px 5px 5px 7px;
+      padding: 0 10rem 0 3rem;
 
       div {
         padding: 5px;

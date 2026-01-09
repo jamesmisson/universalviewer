@@ -560,23 +560,26 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
 
   setupResize(): void {
     let isResizing = false;
-    let startX = 0;
-    let startWidth = 0;
+    let grabOffset = 0;
 
+    // Mouse down on left edge
     this.$element.on("mousedown", (e) => {
       const rect = this.$element[0].getBoundingClientRect();
       const clickX = e.clientX - rect.left;
 
       if (clickX <= 10) {
         isResizing = true;
-        startX = e.pageX;
-        startWidth = this.$element.width() || 0;
+        grabOffset = clickX; // distance from left edge where mouse grabbed
+
         e.preventDefault();
         e.stopPropagation();
       }
     });
 
+    // Hover cursor handling
     this.$element.on("mousemove", (e) => {
+      if (isResizing) return;
+
       const rect = this.$element[0].getBoundingClientRect();
       const hoverX = e.clientX - rect.left;
 
@@ -590,28 +593,40 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
     });
 
     this.$element.on("mouseleave", () => {
+      if (isResizing) return;
       this.$element.css("cursor", "default");
       this.$element.removeClass("resizing-hover");
     });
 
+    // Resize while dragging
     $(document).on("mousemove", (e) => {
       if (!isResizing) return;
 
-      const diff = startX - e.pageX;
-      const newWidth = startWidth + diff;
+      const rect = this.$element[0].getBoundingClientRect();
+
+      // Keep the left edge aligned with the cursor
+      const newLeft = e.clientX - grabOffset;
+      const rightEdge = rect.right;
+      const newWidth = rightEdge - newLeft;
+
       const minWidth = 200;
-      const maxWidth = this.$element.parent().width() - 300;
+      const maxWidth = (this.$element.parent().width() || 0) - 300;
 
       if (newWidth >= minWidth && newWidth <= maxWidth) {
-        this.$element.css("width", newWidth + "px");
-        this.$element.css("flex", `0 0 ${newWidth}px`);
+        this.$element.css({
+          width: `${newWidth}px`,
+          flex: `0 0 ${newWidth}px`,
+        });
       }
     });
 
+    // Stop resizing
     $(document).on("mouseup", () => {
-      if (isResizing) {
-        isResizing = false;
-      }
+      if (!isResizing) return;
+
+      isResizing = false;
+      this.$element.css("cursor", "default");
+      this.$element.removeClass("resizing-hover");
     });
   }
 
