@@ -44,6 +44,9 @@ export class OpenSeadragonBackgroundPanel extends BaseView<
   userData: any;
   viewer: any;
   viewerId: string;
+  $textPanel: JQuery;
+  $resizeHandle: JQuery;
+  isTextPanelEnabled: boolean = false;
 
   $canvas: JQuery;
   $spinner: JQuery;
@@ -67,6 +70,17 @@ export class OpenSeadragonBackgroundPanel extends BaseView<
     this.viewerId = "osd" + new Date().getTime();
     this.$viewer = $('<div id="' + this.viewerId + '" class="viewer"></div>');
     this.$element.prepend(this.$viewer);
+
+    this.$textPanel = $('<div class="textPanel"></div>');
+    this.$element.append(this.$textPanel);
+
+    this.isTextPanelEnabled = (
+      this.extension as OpenSeadragonExtension
+    ).isTextRightPanelEnabled();
+
+    if (this.isTextPanelEnabled) {
+      this.$element.addClass("textEnabled");
+    }
 
     this.extensionHost.subscribe(IIIFEvents.ANNOTATIONS, (args: any) => {
       this.overlayAnnotations();

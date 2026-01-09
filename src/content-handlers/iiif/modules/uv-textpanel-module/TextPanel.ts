@@ -1,0 +1,629 @@
+const $ = require("jquery");
+import { BaseView } from "../uv-shared-module/BaseView";
+import { Config } from "../../extensions/uv-openseadragon-extension/config/Config";
+import { Events } from "../../../../Events";
+import OpenSeadragonExtension from "../../extensions/uv-openseadragon-extension/Extension";
+import OpenSeadragon from "openseadragon";
+import { Clipboard } from "../../Utils";
+import { IExternalImageResourceData } from "manifesto.js";
+import { AnnotationRect } from "@iiif/manifold";
+import { OpenSeadragonExtensionEvents } from "../../extensions/uv-openseadragon-extension/Events";
+import { AnnotationPage, Annotation, IManifestoOptions } from "manifesto.js";
+
+interface LineData {
+  text: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
+  $transcribedText: JQuery;
+  $spinner: JQuery;
+  $existingAnnotation: JQuery = $();
+  $copyButton: JQuery;
+  $copiedText: JQuery;
+  $top: JQuery;
+  $main: JQuery;
+  currentCanvasIndex: number = 0;
+  currentHitIndex: number = 1;
+  currentRectIndex: number = 0;
+  currentAnnotationRect: AnnotationRect | undefined;
+  offsetX: number = 0;
+  index: number = 0;
+  clipboardText: string = "";
+  isProcessingLoad: boolean = false;
+
+  constructor($element: JQuery) {
+    super($element);
+  }
+
+  create(): void {
+    this.setConfig("textPanel");
+    super.create();
+
+    // Create top and main sections like RightPanel
+    this.$top = $('<div class="top"></div>');
+    this.$element.append(this.$top);
+
+    this.$main = $('<div class="main"></div>');
+    this.$element.append(this.$main);
+
+    // Add copy button if enabled
+    if (
+      this.config.options.copyToClipboardEnabled &&
+      Clipboard.supportsCopy()
+    ) {
+      this.$copyButton = $(
+        '<div class="copyText" alt="' +
+          this.config.content.copyToClipboard +
+          '" title="' +
+          this.config.content.copyToClipboard +
+          '"></div>'
+      );
+
+      this.$copiedText = $(
+        '<div class="copiedText">' +
+          this.config.content.copiedToClipboard +
+          " </div>"
+      );
+      this.$copiedText.hide();
+      this.$copyButton.hide();
+
+      this.$copyButton.append(this.$copiedText);
+
+      const that = this;
+      this.$top.on("mouseenter", () => {
+        that.$copyButton.show();
+      });
+      this.$top.on("mouseleave", () => {
+        that.$copyButton.hide();
+      });
+      this.$copyButton.on("mouseleave", () => {
+        that.$copiedText.hide();
+      });
+
+      this.$copyButton.on("click", () => {
+        const text = that.$transcribedText.attr("data-text");
+        this.copyText(text);
+      });
+
+      this.$top.append(this.$copyButton);
+    }
+
+    // Event listeners
+    this.extensionHost.on(Events.SEARCH_HIT_CHANGED, (e) => {
+      this.currentRectIndex = e[0].rectIndex;
+      const canvasIndex = this.extension.helper.canvasIndex;
+      this.currentHitIndex = e[0].hitIndex;
+
+      $(".transcribed-text .searchHitSpan").each(
+        (i: Number, searchHit: any) => {
+          if ($(searchHit).hasClass("current")) {
+            $(searchHit).removeClass("current");
+            return;
+          }
+        }
+      );
+
+      if (
+        $(
+          '.transcribed-text .searchHitSpan[data-index="' +
+            this.currentRectIndex +
+            '"][data-canvas-index="' +
+            canvasIndex +
+            '"]'
+        )[0] !== undefined
+      ) {
+        $(
+          '.transcribed-text .searchHitSpan[data-index="' +
+            this.currentRectIndex +
+            '"][data-canvas-index="' +
+            canvasIndex +
+            '"]'
+        ).addClass("current");
+        $(
+          '.transcribed-text .searchHitSpan[data-index="' +
+            this.currentRectIndex +
+            '"][data-canvas-index="' +
+            canvasIndex +
+            '"]'
+        )
+          .closest("div")[0]
+          .scrollIntoView({
+            behavior: "instant",
+            block: "end",
+            inline: "nearest",
+          });
+        this.setCurrentAnnotation(canvasIndex, this.currentRectIndex);
+      }
+    });
+
+    this.extensionHost.on(
+      OpenSeadragonExtensionEvents.CANVAS_CLICK,
+      (e: any) => {
+        var target = e.originalTarget || e.originalEvent.target;
+        $(target).trigger("click");
+      }
+    );
+
+    this.extensionHost.on(Events.LOAD, async (e) => {
+      if (this.isProcessingLoad) return;
+
+      this.isProcessingLoad = true;
+      const canvases = this.extension.getCurrentCanvases();
+      canvases.sort((a, b) => ((a.index as number) - b.index) as number);
+
+      const canvasExists = canvases.some(
+        (x) => x.index === this.currentCanvasIndex
+      );
+
+      if (canvasExists) {
+        this.$existingAnnotation = $(".lineAnnotation.current");
+      } else {
+        this.$existingAnnotation = $();
+      }
+      this.currentCanvasIndex = this.extension.helper.canvasIndex;
+
+      this.$main.html("");
+      this.clipboardText = "";
+      this.removeLineAnnotationRects();
+
+      for (let i = 0; i < canvases.length; i++) {
+        const c = canvases[i];
+        const seeAlso = c.getProperty("seeAlso");
+        const annotations = c.getAnnotations();
+
+        let header;
+        if (i === 0 && canvases.length > 1) {
+          header = this.content.leftPage;
+        } else if (i === 1 && canvases.length > 1) {
+          header = this.content.rightPage;
+        }
+
+        // Find offset if showing more pages than one
+        const res = this.extension.resources;
+        this.offsetX = -1;
+        this.index = -1;
+        if (res !== null && res !== undefined) {
+          const resource: any = res.filter((x) => x.index === c.index)[0];
+          this.index = res.indexOf(resource);
+          this.offsetX = 0;
+
+          if (this.index > 0) {
+            this.offsetX = (<IExternalImageResourceData>(
+              res[this.index - 1]
+            )).width;
+          }
+        }
+
+        if (this.offsetX === 0 && this.$transcribedText) {
+          this.$transcribedText.html("");
+        }
+
+        if (annotations.length) {
+          await this.processWebAnnotations(annotations, c.index, header);
+        } else if (seeAlso && seeAlso.length === undefined) {
+          if (seeAlso.profile.includes("alto")) {
+            await this.processAltoFile(seeAlso["@id"], c.index, header);
+          }
+        } else if (seeAlso && seeAlso.length > 0) {
+          if (seeAlso[0].profile.includes("alto")) {
+            await this.processAltoFile(seeAlso[0]["id"], c.index, header);
+          }
+        }
+
+        if (
+          $(
+            '.transcribed-text .searchHitSpan[data-index="' +
+              this.currentRectIndex +
+              '"][data-canvas-index="' +
+              this.currentCanvasIndex +
+              '"]'
+          )[0] !== undefined
+        ) {
+          $(
+            '.transcribed-text .searchHitSpan[data-index="' +
+              this.currentRectIndex +
+              '"][data-canvas-index="' +
+              this.currentCanvasIndex +
+              '"]'
+          ).addClass("current");
+          $(
+            '.transcribed-text .searchHitSpan[data-index="' +
+              this.currentRectIndex +
+              '"][data-canvas-index="' +
+              this.currentCanvasIndex +
+              '"]'
+          )
+            .closest("div")[0]
+            .scrollIntoView({
+              behavior: "instant",
+              block: "end",
+              inline: "nearest",
+            });
+          this.setCurrentAnnotation(
+            this.currentCanvasIndex,
+            this.currentRectIndex
+          );
+        }
+      }
+      this.isProcessingLoad = false;
+    });
+
+    // this.setTitle(this.config.content.title);
+
+    // Setup resize functionality
+    this.setupResize();
+  }
+
+  private extractAltoData(altoDoc: Document): LineData[] {
+    const textLines = altoDoc.querySelectorAll("TextLine");
+
+    return Array.from(textLines).map((e) => {
+      const strings = e.querySelectorAll("String");
+      const t = Array.from(strings).map((s) => s.getAttribute("CONTENT"));
+      const text = t.join(" ");
+
+      let x = Number(e.getAttribute("HPOS"));
+      const y = Number(e.getAttribute("VPOS"));
+      const width = Number(e.getAttribute("WIDTH"));
+      const height = Number(e.getAttribute("HEIGHT"));
+
+      const centerPanel = (<OpenSeadragonExtension>this.extension).centerPanel;
+      x =
+        x +
+        this.offsetX +
+        (this.index > 0 ? centerPanel.config.options.pageGap : 0);
+
+      this.clipboardText += text + " ";
+
+      return { text, x, y, width, height };
+    });
+  }
+
+  private extractWebAnnotationData(annotations: Annotation[]): LineData[] {
+    return annotations
+      .map((a) => {
+        const bodies = a.getBody();
+        if (!bodies || bodies.length === 0) return null;
+
+        const body = bodies[0];
+        const text = body.getValue();
+        const target = a?.getTarget();
+
+        if (!target) return null;
+
+        const xywh = target.split("#xywh=")[1];
+
+        let baseX: number, y: number, width: number, height: number;
+
+        if (!xywh) {
+          baseX = 0;
+          y = 0;
+          width = 0;
+          height = 0;
+        } else {
+          [baseX, y, width, height] = xywh.split(",").map(Number);
+        }
+
+        const centerPanel = (<OpenSeadragonExtension>this.extension)
+          .centerPanel;
+        const x =
+          baseX +
+          this.offsetX +
+          (this.index > 0 ? centerPanel.config.options.pageGap : 0);
+
+        this.clipboardText += text + " ";
+
+        return { text, x, y, width, height };
+      })
+      .filter((line): line is LineData => line !== null);
+  }
+
+  private createLineElements(
+    lineDataArray: LineData[],
+    canvasIndex: number
+  ): JQuery[] {
+    return lineDataArray.map((lineData, i) => {
+      const { text, x, y, width, height } = lineData;
+
+      const line = $(
+        `<div id="line-annotation-${canvasIndex}-${i}" class="lineAnnotation" tabindex="0"></div>`
+      ).text(text);
+
+      if (!this.extension.isMobile()) {
+        const div = $(
+          `<div id="line-annotation-${canvasIndex}-${i}" class="lineAnnotationRect" ` +
+            `data-x="${x}" data-y="${y}" ` +
+            `data-width="${width}" data-height="${height}" tabindex="0"></div>`
+        ).attr("title", text);
+
+        this.attachLineEventHandlers(div, line);
+
+        const osRect = new OpenSeadragon.Rect(x, y, width, height);
+        (<OpenSeadragonExtension>(
+          this.extension
+        )).backgroundPanel.viewer.addOverlay(div[0], osRect);
+      }
+
+      return line;
+    });
+  }
+
+  private attachLineEventHandlers(div: JQuery, line: JQuery): void {
+    const handleClick = (target: HTMLElement) => {
+      const canvasIndex = Number(target.getAttribute("id")!.split("-")[2]);
+      if (canvasIndex !== this.currentCanvasIndex) {
+        this.extension.helper.canvasIndex = canvasIndex;
+        this.currentCanvasIndex = canvasIndex;
+      }
+
+      this.clearLineAnnotationRects();
+      this.clearLineAnnotations();
+      this.setCurrentLineAnnotation(target, true);
+      this.setCurrentLineAnnotationRect(target);
+    };
+
+    div.on("keydown", (e: any) => {
+      if (e.keyCode === 13) $(e.target).trigger("click");
+    });
+    div.on("click", (e: any) => handleClick(e.target));
+
+    line.on("keydown", (e: any) => {
+      if (e.keyCode === 13) $(e.target).trigger("click");
+    });
+    line.on("click", (e: any) => handleClick(e.currentTarget));
+  }
+
+  private renderTranscribedText(lines: JQuery[], header?: string): void {
+    if (!this.$transcribedText) {
+      this.$transcribedText = $('<div class="transcribed-text"></div>');
+    }
+
+    if (header) {
+      this.$transcribedText.append($(`<div class="label">${header}</div>`));
+    }
+
+    if (lines.length > 0) {
+      this.$transcribedText.append(lines);
+      this.$transcribedText.attr("data-text", this.clipboardText.trimEnd());
+    } else {
+      this.$transcribedText.append(
+        $(`<div>${this.content.textNotFound}</div>`)
+      );
+    }
+
+    if (
+      this.$transcribedText[0]?.firstElementChild?.firstChild?.toString().trim()
+    ) {
+      this.$spinner.hide();
+    }
+
+    this.$main.append(this.$transcribedText);
+
+    if (this.$existingAnnotation[0] !== undefined) {
+      const id = $(this.$existingAnnotation).attr("id");
+      if ($("div#" + id).length > 0) {
+        this.setCurrentLineAnnotation($("div#" + id)[0], true);
+        this.setCurrentLineAnnotationRect($("div#" + id)[0]);
+      }
+    }
+  }
+
+  private showSpinner(): void {
+    this.$spinner = $('<div class="spinner"></div>');
+    this.$spinner.css(
+      "top",
+      this.$main.height() / 2 - this.$spinner.height() / 2
+    );
+    this.$main.append(this.$spinner);
+    this.$spinner.show();
+  }
+
+  processAltoFile = async (
+    altoUrl: string,
+    canvasIndex: number,
+    header?: string
+  ): Promise<void> => {
+    this.showSpinner();
+
+    try {
+      const response = await fetch(altoUrl);
+      const data = await response.text();
+      const altoDoc = new DOMParser().parseFromString(data, "application/xml");
+
+      const lineDataArray = this.extractAltoData(altoDoc);
+      const lines = this.createLineElements(lineDataArray, canvasIndex);
+
+      this.renderTranscribedText(lines, header);
+    } catch (error) {
+      console.error("Unable to fetch Alto file:", error);
+      this.$spinner.hide();
+      this.$transcribedText = $('<div class="transcribed-text"></div>');
+      this.$transcribedText.append(
+        $(`<div>${this.content.textNotFound}</div>`)
+      );
+      this.$main.append(this.$transcribedText);
+    }
+  };
+
+  processWebAnnotations = async (
+    annotations: AnnotationPage[],
+    canvasIndex: number,
+    header?: string
+  ): Promise<void> => {
+    this.showSpinner();
+
+    try {
+      for (const annotationPageRef of annotations) {
+        let annotationPage: AnnotationPage;
+
+        const embeddedAnnotations = annotationPageRef.getAnnotations();
+
+        if (embeddedAnnotations && embeddedAnnotations.length > 0) {
+          annotationPage = annotationPageRef;
+        } else if (annotationPageRef.id) {
+          const response = await fetch(annotationPageRef.id);
+          const annotationPageData = await response.json();
+
+          const options: IManifestoOptions = <IManifestoOptions>{
+            locale: this.extension.helper.options.locale ?? "en-GB",
+          };
+
+          annotationPage = new AnnotationPage(annotationPageData, options);
+        } else {
+          continue;
+        }
+
+        const annotationsList = annotationPage.getAnnotations();
+
+        if (annotationsList && annotationsList.length > 0) {
+          const lineDataArray = this.extractWebAnnotationData(annotationsList);
+          const lines = this.createLineElements(lineDataArray, canvasIndex);
+
+          this.renderTranscribedText(lines, header);
+        }
+      }
+    } catch (error) {
+      console.error("Error processing annotations:", error);
+    }
+  };
+
+  copyText(text: string): void {
+    Clipboard.copy(text);
+
+    this.$copiedText.show();
+
+    setTimeout(() => {
+      this.$copiedText.hide();
+    }, 2000);
+  }
+
+  setCurrentLineAnnotationRect(e: any): void {
+    $("div.lineAnnotationRect").each((i: Number, lineAnnotationRect: any) => {
+      if ($(lineAnnotationRect).hasClass("current")) {
+        $(lineAnnotationRect).removeClass("current");
+      }
+    });
+    $("div#" + e.getAttribute("id") + ".lineAnnotationRect").addClass(
+      "current"
+    );
+  }
+
+  setCurrentLineAnnotation(e: any, scrollIntoView: Boolean): void {
+    $(".lineAnnotation").each((i: Number, lineAnnotation: any) => {
+      if ($(lineAnnotation).hasClass("current")) {
+        $(lineAnnotation).removeClass("current");
+      }
+    });
+    $("div#" + e.getAttribute("id") + ".lineAnnotation").addClass("current");
+    if (scrollIntoView) {
+      $("div#" + e.getAttribute("id") + ".lineAnnotation")[0].scrollIntoView({
+        behavior: "instant",
+        block: "end",
+        inline: "nearest",
+      });
+    }
+  }
+
+  clearLineAnnotationRects(): void {
+    $("div.lineAnnotationRect").each((i: Number, lineAnnotationRect: any) => {
+      if ($(lineAnnotationRect).hasClass("current")) {
+        $(lineAnnotationRect).removeClass("current");
+      }
+    });
+  }
+
+  clearLineAnnotations(): void {
+    $(".lineAnnotation").each((i: Number, lineAnnotation: any) => {
+      if ($(lineAnnotation).hasClass("current")) {
+        $(lineAnnotation).removeClass("current");
+      }
+    });
+  }
+
+  removeLineAnnotationRects(): void {
+    $("div.lineAnnotationRect").remove();
+  }
+
+  setCurrentAnnotation(canvasIndex: any, index: any): void {
+    $(".annotationRect").each((i: number, annotation: any) => {
+      if ($(annotation).hasClass("current")) {
+        $(annotation).removeClass("current");
+        return;
+      }
+    });
+    $("div#annotation-" + canvasIndex + "-" + index).addClass("current");
+  }
+
+  setupResize(): void {
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    this.$element.on("mousedown", (e) => {
+      const rect = this.$element[0].getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+
+      if (clickX <= 10) {
+        isResizing = true;
+        startX = e.pageX;
+        startWidth = this.$element.width() || 0;
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+
+    this.$element.on("mousemove", (e) => {
+      const rect = this.$element[0].getBoundingClientRect();
+      const hoverX = e.clientX - rect.left;
+
+      if (hoverX <= 10) {
+        this.$element.css("cursor", "col-resize");
+        this.$element.addClass("resizing-hover");
+      } else {
+        this.$element.css("cursor", "default");
+        this.$element.removeClass("resizing-hover");
+      }
+    });
+
+    this.$element.on("mouseleave", () => {
+      this.$element.css("cursor", "default");
+      this.$element.removeClass("resizing-hover");
+    });
+
+    $(document).on("mousemove", (e) => {
+      if (!isResizing) return;
+
+      const diff = startX - e.pageX;
+      const newWidth = startWidth + diff;
+      const minWidth = 200;
+      const maxWidth = this.$element.parent().width() - 300;
+
+      if (newWidth >= minWidth && newWidth <= maxWidth) {
+        this.$element.css("width", newWidth + "px");
+        this.$element.css("flex", `0 0 ${newWidth}px`);
+      }
+    });
+
+    $(document).on("mouseup", () => {
+      if (isResizing) {
+        isResizing = false;
+      }
+    });
+  }
+
+  resize(): void {
+    super.resize();
+
+    if (this.$main) {
+      this.$main.height(
+        this.$element.height() -
+          this.$top.height() -
+          this.$main.verticalMargins()
+      );
+    }
+  }
+}

@@ -57,6 +57,7 @@ import defaultConfig from "./config/config.json";
 import { Config } from "./config/Config";
 import { AdjustImageDialogue } from "../../modules/uv-dialogues-module/AdjustImageDialogue";
 import { TextRightPanel } from "../../modules/uv-textrightpanel-module/TextRightPanel";
+import { TextPanel } from "../../modules/uv-textpanel-module/TextPanel";
 import { SearchLeftPanel } from "../../modules/uv-searchleftpanel-module/SearchLeftPanel";
 import { SearchHit } from "../../modules/uv-shared-module/SearchHit";
 
@@ -85,6 +86,7 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
   previousAnnotationRect: AnnotationRect | null;
   rightPanel: MoreInfoRightPanel;
   textRightPanel: TextRightPanel;
+  textPanel: TextPanel;
   settingsDialogue: SettingsDialogue;
   shareDialogue: ShareDialogue;
   defaultConfig: Config = defaultConfig;
@@ -550,6 +552,10 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
     this.backgroundPanel = new OpenSeadragonBackgroundPanel(
       this.shell.$backgroundPanel
     );
+
+    if (this.isTextRightPanelEnabled()) {
+      this.textPanel = new TextPanel(this.backgroundPanel.$textPanel);
+    }
 
     if (this.isRightPanelEnabled()) {
       this.rightPanel = new MoreInfoRightPanel(this.shell.$rightPanel);

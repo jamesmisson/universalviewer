@@ -1,7 +1,11 @@
 @import "mobile";
-
 .uv-iiif-extension-host.uv-openseadragon-extension {
   @search-result: @brand-secondary;
+
+  .viewer {
+    flex: 1;
+    position: relative;
+  }
 
   .navigator.extraMargin {
     margin: 0 30px 0 0 !important;
@@ -19,7 +23,6 @@
     background-color: desaturate(@search-result, 40%);
     .opacity(0.5);
     &.current {
-      //border: 3px solid #fff;
       @col: lighten(@search-result, 20%);
       background-color: saturate(@col, 100%);
     }
@@ -40,7 +43,6 @@
   }
 
   .annotationPin {
-    // background-color: white;
     background-image: data-uri("../img/pin.svg") !important;
     width: 26px !important;
     height: 37px !important;
@@ -48,7 +50,6 @@
     transform: translate(-45%, -90%);
     overflow: hidden;
     cursor: pointer;
-
     span {
       color: #2a2a2a;
       user-select: none;
