@@ -180,6 +180,8 @@ type SearchLeftPanelOptions = DialogueOptions &
     textLimit: number;
     /** Type of the text limit */
     textLimitType: string;
+    autocompleteAllowWords: Boolean;
+    autoCompleteBoxEnabled: Boolean;
   };
 
 type SearchLeftPanelContent = DialogueContent &
