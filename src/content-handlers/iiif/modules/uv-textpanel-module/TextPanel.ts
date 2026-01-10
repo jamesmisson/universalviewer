@@ -653,8 +653,8 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
     $("div#" + e.getAttribute("id") + ".lineAnnotation").addClass("current");
     if (scrollIntoView) {
       $("div#" + e.getAttribute("id") + ".lineAnnotation")[0].scrollIntoView({
-        behavior: "instant",
-        block: "end",
+        behavior: "smooth",
+        block: "center",
         inline: "nearest",
       });
     }

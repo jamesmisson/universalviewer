@@ -220,7 +220,6 @@ export class AutoComplete {
   }
 
   private _hideResults(): void {
-    console.trace("_hideResults called"); // Changed from console.log to console.trace
     this._$searchResultsList.hide();
   }
 
