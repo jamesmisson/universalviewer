@@ -56,7 +56,6 @@ import { merge } from "../../../../Utils";
 import defaultConfig from "./config/config.json";
 import { Config } from "./config/Config";
 import { AdjustImageDialogue } from "../../modules/uv-dialogues-module/AdjustImageDialogue";
-import { TextRightPanel } from "../../modules/uv-textrightpanel-module/TextRightPanel";
 import { TextPanel } from "../../modules/uv-textpanel-module/TextPanel";
 import { SearchLeftPanel } from "../../modules/uv-searchleftpanel-module/SearchLeftPanel";
 import { SearchHit } from "../../modules/uv-shared-module/SearchHit";
@@ -85,7 +84,6 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
   multiSelectDialogue: MultiSelectDialogue;
   previousAnnotationRect: AnnotationRect | null;
   rightPanel: MoreInfoRightPanel;
-  textRightPanel: TextRightPanel;
   textPanel: TextPanel;
   settingsDialogue: SettingsDialogue;
   shareDialogue: ShareDialogue;
@@ -200,7 +198,6 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
       () => {
         if (this.isDesktopMetric()) {
           this.shell.$rightPanel.show();
-          this.shell.$textRightPanel.show();
           this.shell.$searchLeftPanel.show();
         }
       }
@@ -217,7 +214,6 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
     this.extensionHost.subscribe(IIIFEvents.LEFTPANEL_EXPAND_FULL_START, () => {
       this.shell.$centerPanel.hide();
       this.shell.$rightPanel.hide();
-      this.shell.$textRightPanel.hide();
       this.shell.$searchLeftPanel.hide();
     });
 
@@ -553,23 +549,16 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
       this.shell.$backgroundPanel
     );
 
-    if (this.isTextRightPanelEnabled()) {
+    if (this.isTextPanelEnabled()) {
       this.textPanel = new TextPanel(this.backgroundPanel.$textPanel);
+    } else {
+      this.backgroundPanel.$textPanel.hide();
     }
 
     if (this.isRightPanelEnabled()) {
       this.rightPanel = new MoreInfoRightPanel(this.shell.$rightPanel);
     } else {
       this.shell.$rightPanel.hide();
-    }
-
-    if (this.isTextRightPanelEnabled()) {
-      this.textRightPanel = new TextRightPanel(
-        this.shell.$textRightPanel,
-        this.shell
-      );
-    } else {
-      this.shell.$textRightPanel.hide();
     }
 
     if (this.isFooterPanelEnabled()) {

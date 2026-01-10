@@ -8,6 +8,26 @@
   transition: border-color 0.2s;
   color: @text-color;
 
+  // Gradient at bottom
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(
+      to top,
+      // Changed from "to bottom"
+      rgb(0 0 0 / 40%) 0%,
+      transparent 100%
+    );
+    opacity: 1; // Always visible, or set to 0 and control with a class
+    transition: opacity 0.3s ease;
+    pointer-events: none; // So it doesn't block clicks
+    z-index: 10; // Make sure it's above content
+  }
+
   &.resizing-hover {
     border-left: 2px solid rgb(255 255 255 / 60%);
   }

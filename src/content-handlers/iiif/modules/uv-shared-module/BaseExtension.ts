@@ -1121,10 +1121,8 @@ export class BaseExtension<T extends BaseConfig> implements IExtension {
     return Bools.getBool(this.data.config!.options.rightPanelEnabled, true);
   }
 
-  isTextRightPanelEnabled(): boolean {
-    if (
-      !Bools.getBool(this.data.config!.options.textRightPanelEnabled, false)
-    ) {
+  isTextPanelEnabled(): boolean {
+    if (!Bools.getBool(this.data.config!.options.textPanelEnabled, false)) {
       return false;
     }
 

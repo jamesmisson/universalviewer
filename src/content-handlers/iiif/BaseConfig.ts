@@ -76,8 +76,8 @@ export type Options = {
   /** Determines if the right panel is enabled */
   rightPanelEnabled?: boolean;
 
-  /** Determines if the text right panel is enabled */
-  textRightPanelEnabled?: boolean;
+  /** Determines if the text panel is enabled */
+  textPanelEnabled?: boolean;
 
   /** Determines if user settings are saved */
   saveUserSettings?: boolean;

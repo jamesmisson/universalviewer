@@ -13,7 +13,6 @@ import {
 import { debounce, sanitize } from "../../../../Utils";
 import { IIIFEvents } from "../../IIIFEvents";
 import { XYWHFragment } from "../uv-shared-module/XYWHFragment";
-// import { CenterPanel } from "../uv-shared-module/CenterPanel";
 import { BaseView } from "../uv-shared-module/BaseView";
 import { CroppedImageDimensions } from "../../extensions/uv-openseadragon-extension/CroppedImageDimensions";
 import { OpenSeadragonExtensionEvents } from "../../extensions/uv-openseadragon-extension/Events";
@@ -76,7 +75,7 @@ export class OpenSeadragonBackgroundPanel extends BaseView<
 
     this.isTextPanelEnabled = (
       this.extension as OpenSeadragonExtension
-    ).isTextRightPanelEnabled();
+    ).isTextPanelEnabled();
 
     if (this.isTextPanelEnabled) {
       this.$element.addClass("textEnabled");

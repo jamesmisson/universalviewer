@@ -25,12 +25,10 @@
   --uv-grid-left-width-open: 271px;
   --uv-grid-search-left-width-open: 271px;
   --uv-grid-right-width-open: 271px;
-  --uv-grid-text-right-width-open: 271px;
   --uv-grid-left-width: 30px;
   --uv-grid-search-left-width: 30px;
   --uv-grid-main-width: minmax(0, 1fr);
   --uv-grid-right-width: 30px;
-  --uv-grid-text-right-width: 30px;
   --uv-panel-width-closed: 30px;
 }
 
@@ -151,9 +149,8 @@
                 [left] var(--uv-grid-left-width) 
                 [search-left] var(--uv-grid-search-left-width)
                 [center] var(--uv-grid-main-width)
-                [text-right] var(--uv-grid-text-right-width)
                 [right] var(--uv-grid-right-width);
-            grid-template-areas: "left search-left center text-right right";
+            grid-template-areas: "left search-left center right";
             column-gap: 1px;
 
     transition-property: grid-template-columns;
@@ -173,10 +170,6 @@
     &:has(.rightPanel:empty) {
       --uv-grid-right-width: auto;
     }
-
-    &:has(.textRightPanel:empty) {
-      --uv-grid-text-right-width: auto;
-    }
   }
 
   .overlayPanels.leftPanelOpen {
@@ -189,10 +182,6 @@
 
   .overlayPanels.rightPanelOpen {
     --uv-grid-right-width: var(--uv-grid-right-width-open);
-  }
-
-  .overlayPanels.textRightPanelOpen {
-    --uv-grid-text-right-width: var(--uv-grid-text-right-width-open);
   }
 
   .overlayPanels.leftPanelOpenFull {
@@ -251,8 +240,7 @@
 
   .leftPanel,
   .rightPanel,
-  .searchLeftPanel,
-  .textRightPanel {
+  .searchLeftPanel {
     background: @panel-dark-bg;
     border: @panel-border;
     font-size: @font-size-large;
@@ -370,8 +358,7 @@
         });
   }
 
-  .rightPanel,
-  .textRightPanel {
+  .rightPanel {
     right: 0;
     left: auto;
     transform: translateX(100%);
@@ -382,14 +369,7 @@
         });
   }
 
-  .textRightPanel {
-    .md-mediaquery({
-            grid-area: text-right;
-        });
-  }
-
-  .rightPanel.open,
-  .textRightPanel.open {
+  .rightPanel.open {
     transform: none;
     width: min(95%, 30rem);
 
@@ -422,10 +402,6 @@
     }
 
     .rightPanel {
-      display: none;
-    }
-
-    .textRightPanel {
       display: none;
     }
 

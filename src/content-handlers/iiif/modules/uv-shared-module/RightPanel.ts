@@ -81,19 +81,19 @@ export class RightPanel<T extends ExpandPanel> extends BaseExpandPanel<T> {
 
   toggle(autoToggled?: boolean): void {
     if (this.isExpanded) {
-      if (this.$element.hasClass("textRightPanel")) {
-        this.$element.parent().removeClass("textRightPanelOpen");
+      if (this.$element.hasClass("textPanel")) {
+        this.$element.parent().removeClass("textPanelOpen");
       } else {
         this.$element.parent().removeClass("rightPanelOpen");
       }
     } else {
       const panelWidth = this.options.panelExpandedWidth ?? 271;
-      if (this.$element.hasClass("textRightPanel")) {
+      if (this.$element.hasClass("textPanel")) {
         document.documentElement.style.setProperty(
           "--uv-grid-text-right-width-open",
           `${panelWidth}px`
         );
-        this.$element.parent().addClass("textRightPanelOpen");
+        this.$element.parent().addClass("textPanelOpen");
       } else {
         document.documentElement.style.setProperty(
           "--uv-grid-right-width-open",
