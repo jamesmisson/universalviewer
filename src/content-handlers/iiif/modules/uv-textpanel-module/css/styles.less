@@ -1,87 +1,70 @@
 .textPanel {
   position: relative;
   width: 0;
-  overflow: auto;
+  overflow: hidden;
   background: black;
-  border-left: 2px solid black;
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
   display: none;
   transition: border-color 0.2s;
   color: @text-color;
 
-  // Gradient at bottom
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.4) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
   &::after {
     content: "";
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: 80px;
     background: linear-gradient(
       to top,
-      // Changed from "to bottom"
-      rgb(0 0 0 / 40%) 0%,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.4) 50%,
       transparent 100%
     );
-    opacity: 1; // Always visible, or set to 0 and control with a class
-    transition: opacity 0.3s ease;
-    pointer-events: none; // So it doesn't block clicks
-    z-index: 10; // Make sure it's above content
+    pointer-events: none;
+    z-index: 10;
   }
 
   &.resizing-hover {
-    border-left: 2px solid rgb(255 255 255 / 60%);
-  }
-
-  .top {
-    .copyText {
-      position: absolute;
-      background-image: data-uri("../img/copy.png") !important;
-      width: 15px;
-      height: 15px;
-      right: 40px;
-      top: 10px;
-      cursor: pointer;
-    }
-
-    .copiedText {
-      color: @text-color !important;
-      position: absolute;
-      top: 18px;
-      right: -10px;
-      white-space: nowrap;
-      padding: 4px;
-      text-transform: none;
-      background-color: #343434;
-      z-index: 1;
-      border: 1px solid #9a9a9a;
-      border-radius: 2px;
-    }
-
-    .title {
-      text-transform: uppercase;
-      position: relative;
-    }
+    border-left: 2px solid rgba(255, 255, 255, 0.4);
   }
 
   .main {
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
     color: @text-color;
-
-    // Add padding at the top and bottom that will scroll with content
-    &::before {
-      content: "";
-      display: block;
-      height: 5rem; // Space at the top
-    }
-
-    &::after {
-      content: "";
-      display: block;
-      height: 5rem; // Space at the bottom
-    }
+    display: flex;
+    justify-content: center;
 
     .transcribed-text {
-      padding: 0 10rem 0 3rem;
+      width: 100%;
+      max-width: 550px; //I've just eyeballed this, but it should probably be set dynamically based on the length of a line in the text.
+      padding: 5rem 5rem;
+      margin: 0 auto;
+
+      &::after {
+        content: "";
+        display: block;
+        height: 10rem;
+      }
 
       div {
         padding: 5px;

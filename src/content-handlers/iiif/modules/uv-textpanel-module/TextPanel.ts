@@ -24,7 +24,6 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
   $existingAnnotation: JQuery = $();
   $copyButton: JQuery;
   $copiedText: JQuery;
-  $top: JQuery;
   $main: JQuery;
   currentCanvasIndex: number = 0;
   currentHitIndex: number = 1;
@@ -42,10 +41,6 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
   create(): void {
     this.setConfig("textPanel");
     super.create();
-
-    // Create top and main sections like RightPanel
-    this.$top = $('<div class="top"></div>');
-    this.$element.append(this.$top);
 
     this.$main = $('<div class="main"></div>');
     this.$element.append(this.$main);
@@ -74,12 +69,6 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
       this.$copyButton.append(this.$copiedText);
 
       const that = this;
-      this.$top.on("mouseenter", () => {
-        that.$copyButton.show();
-      });
-      this.$top.on("mouseleave", () => {
-        that.$copyButton.hide();
-      });
       this.$copyButton.on("mouseleave", () => {
         that.$copiedText.hide();
       });
@@ -88,8 +77,6 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
         const text = that.$transcribedText.attr("data-text");
         this.copyText(text);
       });
-
-      this.$top.append(this.$copyButton);
     }
 
     function getIntersectionArea(rect1, rect2) {
@@ -650,12 +637,26 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
         $(lineAnnotation).removeClass("current");
       }
     });
-    $("div#" + e.getAttribute("id") + ".lineAnnotation").addClass("current");
-    if (scrollIntoView) {
-      $("div#" + e.getAttribute("id") + ".lineAnnotation")[0].scrollIntoView({
+
+    const $lineAnnotation = $(
+      "div#" + e.getAttribute("id") + ".lineAnnotation"
+    );
+    $lineAnnotation.addClass("current");
+
+    // this is needed to stop the whole browser page from scrolling if UV is embedded
+    if (scrollIntoView && $lineAnnotation.length) {
+      const lineElement = $lineAnnotation[0];
+      const container = this.$main[0];
+
+      const elementTop = lineElement.offsetTop;
+      const elementHeight = lineElement.offsetHeight;
+      const containerHeight = container.clientHeight;
+
+      const scrollTo = elementTop - containerHeight / 2 + elementHeight / 2;
+
+      container.scrollTo({
+        top: scrollTo,
         behavior: "smooth",
-        block: "center",
-        inline: "nearest",
       });
     }
   }
@@ -766,11 +767,7 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
     super.resize();
 
     if (this.$main) {
-      this.$main.height(
-        this.$element.height() -
-          this.$top.height() -
-          this.$main.verticalMargins()
-      );
+      this.$main.height(this.$element.height() - this.$main.verticalMargins());
     }
   }
 }
