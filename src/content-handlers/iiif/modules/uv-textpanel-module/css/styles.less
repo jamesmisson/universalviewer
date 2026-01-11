@@ -1,11 +1,11 @@
-@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap");
+@import "https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap";
 
 .textPanel {
   position: relative;
   width: 0;
   overflow: hidden;
   background: black;
-  border-left: 2px solid rgba(255, 255, 255, 0.1);
+  border-left: 2px solid rgb(255 255 255 / 10%);
   display: none;
   transition: border-color 0.2s;
   color: @text-color;
@@ -19,8 +19,8 @@
     height: 80px;
     background: linear-gradient(
       to bottom,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.4) 50%,
+      rgb(0 0 0 / 80%) 0%,
+      rgb(0 0 0 / 40%) 50%,
       transparent 100%
     );
     pointer-events: none;
@@ -36,8 +36,8 @@
     height: 80px;
     background: linear-gradient(
       to top,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.4) 50%,
+      rgb(0 0 0 / 80%) 0%,
+      rgb(0 0 0 / 40%) 50%,
       transparent 100%
     );
     pointer-events: none;
@@ -45,12 +45,11 @@
   }
 
   &.resizing-hover {
-    border-left: 2px solid rgba(255, 255, 255, 0.4);
+    border-left: 2px solid rgb(255 255 255 / 40%);
   }
 
   .main {
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto;
     height: 100%;
     color: @text-color;
     display: flex;
@@ -59,7 +58,7 @@
     .transcribed-text {
       width: max-content;
       max-width: 100%;
-      padding: 5rem 5rem;
+      padding: 5rem;
       margin: 0 auto;
 
       // trying out serif
@@ -212,8 +211,8 @@
     &::after {
       background: linear-gradient(
         to top,
-        rgba(255, 255, 255, 0.8) 0%,
-        rgba(255, 255, 255, 0.4) 50%,
+        rgb(255 255 255 / 80%) 0%,
+        rgb(255 255 255 / 40%) 50%,
         transparent 100%
       );
     }
@@ -231,8 +230,8 @@
         }
 
         .label {
-          color: rgba(0, 0, 0, 0.5);
-          border-bottom-color: rgba(0, 0, 0, 0.1);
+          color: rgb(0 0 0 / 50%);
+          border-bottom-color: rgb(0 0 0 / 10%);
         }
       }
     }
