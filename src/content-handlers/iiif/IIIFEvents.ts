@@ -62,6 +62,7 @@ export class IIIFEvents {
   static OPEN_EXTERNAL_RESOURCE: string = "openExternalResource";
   static OPEN_LEFT_PANEL: string = "openLeftPanel";
   static OPEN_RIGHT_PANEL: string = "openRightPanel";
+  static OPEN_SEARCH_VIEW: string = "openSearchView";
   static OPEN_THUMBS_VIEW: string = "openThumbsView";
   static OPEN_TREE_VIEW: string = "openTreeView";
   static OPEN: string = "open";

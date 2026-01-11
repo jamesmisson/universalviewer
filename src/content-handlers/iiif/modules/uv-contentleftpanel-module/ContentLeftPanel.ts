@@ -23,6 +23,9 @@ import {
 import { AnnotationGroup, TreeSortType } from "@iiif/manifold";
 import { isVisible } from "../../../../Utils";
 import { ContentLeftPanel as ContentLeftPanelConfig } from "../../extensions/config/ContentLeftPanel";
+import { SearchResultsView } from "./SearchResultsView";
+import { AnnotationResults } from "../uv-shared-module/AnnotationResults";
+import { Events } from "../../../../Events";
 
 export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
   $bottomOptions: JQuery;
@@ -45,15 +48,20 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
   $treeSelect: JQuery;
   $views: JQuery;
   $keyElement: JQuery;
+  $searchButton: JQuery;
+  $searchView: JQuery;
   expandFullEnabled: boolean = false;
   galleryView: GalleryView;
   isThumbsViewOpen: boolean = false;
   isTreeViewOpen: boolean = false;
+  isSearchViewOpen: boolean = false;
   keyPress: boolean = false;
   treeData: TreeNode;
   treeSortType: TreeSortType = TreeSortType.NONE;
   treeView: TreeView;
   thumbsRoot: Root;
+  searchResultsView: SearchResultsView;
+  hasSearchResults: boolean = false;
 
   constructor($element: JQuery) {
     super($element);
@@ -92,19 +100,25 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
       }
     });
 
-    this.extensionHost.subscribe(IIIFEvents.ANNOTATIONS, () => {
-      this.renderThumbs();
-      this.renderGallery();
-    });
+    this.extensionHost.subscribe(
+      IIIFEvents.ANNOTATIONS,
+      (annotationResults: AnnotationResults) => {
+        this.renderThumbs();
+        this.renderGallery();
+        this.handleAnnotations(annotationResults);
+      }
+    );
 
     this.extensionHost.subscribe(IIIFEvents.ANNOTATIONS_CLEARED, () => {
       this.renderThumbs();
       this.renderGallery();
+      this.clearSearchResults();
     });
 
     this.extensionHost.subscribe(IIIFEvents.ANNOTATIONS_EMPTY, () => {
       this.renderThumbs();
       this.renderGallery();
+      this.clearSearchResults();
     });
 
     this.extensionHost.subscribe(IIIFEvents.CANVAS_INDEX_CHANGE, () => {
@@ -114,6 +128,13 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
 
       this.selectCurrentTreeNodeByCanvas();
       this.updateTreeTabBySelection();
+
+      // Update search results view if open
+      if (this.isSearchViewOpen && this.searchResultsView) {
+        const canvasIndex = this.extension.helper.canvasIndex;
+        const index = 0;
+        this.searchResultsView.canvasIndexChanged(canvasIndex, index);
+      }
     });
 
     this.extensionHost.subscribe(IIIFEvents.RANGE_CHANGE, () => {
@@ -135,6 +156,22 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
       this.openThumbsView();
     });
 
+    this.extensionHost.subscribe(IIIFEvents.ANNOTATION_CANVAS_CHANGE, (e) => {
+      if (this.searchResultsView && e && e[0]) {
+        this.searchResultsView.canvasIndexChanged(e[0].canvasIndex, e[0].index);
+      }
+    });
+
+    this.extensionHost.subscribe(Events.SEARCH_HIT_CHANGED, (e) => {
+      if (this.searchResultsView && e && e[0]) {
+        this.searchResultsView.updateSearchHitPager(e[0].hitIndex);
+      }
+    });
+
+    this.extensionHost.subscribe(IIIFEvents.CLEAR_ANNOTATIONS, () => {
+      this.clearSearchResults();
+    });
+
     // this.extensionHost.subscribe(
     //   OpenSeadragonExtensionEvents.PAGING_TOGGLED,
     //   (_paged: boolean) => {
@@ -149,11 +186,18 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
       '<a class="index tab" tabindex="0">' + this.content.index + "</a>"
     );
     this.$tabs.append(this.$treeButton);
+    this.$treeButton.hide(); // Initially hidden, shown in toggleFinish if tree has content
 
     this.$thumbsButton = $(
       '<a class="thumbs tab" tabindex="0">' + this.content.thumbnails + "</a>"
     );
     this.$tabs.append(this.$thumbsButton);
+
+    this.$searchButton = $(
+      '<a class="search tab" tabindex="0">Search</a>' //replace string with something from this.content
+    );
+    this.$tabs.append(this.$searchButton);
+    this.$searchButton.hide(); // Hidden until we have search results
 
     this.$tabsContent = $('<div class="tabsContent"></div>');
     this.$main.append(this.$tabsContent);
@@ -211,6 +255,9 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
     this.$galleryView = $('<div class="galleryView"></div>');
     this.$views.append(this.$galleryView);
 
+    this.$searchView = $('<div class="searchView"></div>');
+    this.$views.append(this.$searchView);
+
     this.$treeSelect.hide();
 
     this.$treeSelect.change(() => {
@@ -242,6 +289,15 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
       this.$thumbsButton,
       () => {
         this.openThumbsView();
+      },
+      true,
+      true
+    );
+
+    this.onAccessibleClick(
+      this.$searchButton,
+      () => {
+        this.openSearchView();
       },
       true,
       true
@@ -299,6 +355,18 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
     }
 
     this.updateTreeViewOptions();
+  }
+
+  createSearchResultsView(): void {
+    if (!this.searchResultsView) {
+      this.searchResultsView = new SearchResultsView(
+        this.$searchView,
+        <OpenSeadragonExtension>this.extension,
+        this.extensionHost,
+        this.content
+      );
+      this.searchResultsView.setup();
+    }
   }
 
   render(): void {
@@ -611,6 +679,57 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
     return this.extension.helper.getTree(topRangeIndex, TreeSortType.NONE);
   }
 
+  handleAnnotations(annotationResults: AnnotationResults): void {
+    if (annotationResults.annotations.length > 0) {
+      this.hasSearchResults = true;
+      this.$searchButton.show();
+
+      // Count visible tabs
+      let visibleTabs = 0;
+      if (this.$treeButton.is(":visible")) visibleTabs++;
+      if (this.$thumbsButton.is(":visible")) visibleTabs++;
+      if (this.$searchButton.is(":visible")) visibleTabs++;
+
+      // Show tabs container if we have 2+ tabs
+      if (visibleTabs >= 2) {
+        this.$tabs.show();
+      }
+
+      this.createSearchResultsView();
+      this.searchResultsView.displaySearchResults(
+        annotationResults.searchHits,
+        annotationResults.terms
+      );
+
+      // Auto-switch to search view when results arrive
+      this.openSearchView();
+    }
+  }
+
+  clearSearchResults(): void {
+    this.hasSearchResults = false;
+    this.$searchButton.hide();
+    if (this.searchResultsView) {
+      this.searchResultsView.clear();
+    }
+
+    // Count remaining visible tabs
+    let visibleTabs = 0;
+    if (this.$treeButton.is(":visible")) visibleTabs++;
+    if (this.$thumbsButton.is(":visible")) visibleTabs++;
+    if (this.$searchButton.is(":visible")) visibleTabs++;
+
+    // Hide tabs container if we only have 1 or 0 tabs
+    if (visibleTabs < 2) {
+      this.$tabs.hide();
+    }
+
+    // Switch back to previous view if search was open
+    if (this.isSearchViewOpen) {
+      this.openThumbsView();
+    }
+  }
+
   toggleFinish(): void {
     super.toggleFinish();
 
@@ -626,13 +745,43 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
 
       const treeData: TreeNode | null = this.getTree();
 
-      if (!treeData || !treeData.nodes.length) {
+      // Check if tree actually has content
+      const treeHasContent =
+        treeData && treeData.nodes && treeData.nodes.length > 0;
+
+      if (!treeHasContent) {
         treeEnabled = false;
       }
 
-      // hide the tabs if either tree or thumbs are disabled
-      if (!treeEnabled || !thumbsEnabled) this.$tabs.hide();
+      // Show/hide individual tabs based on content
+      if (treeEnabled && treeHasContent) {
+        this.$treeButton.show();
+      } else {
+        this.$treeButton.hide();
+      }
 
+      if (thumbsEnabled) {
+        this.$thumbsButton.show();
+      } else {
+        this.$thumbsButton.hide();
+      }
+
+      // searchButton visibility is handled by handleAnnotations/clearSearchResults
+
+      // Count how many tabs are visible
+      let visibleTabs = 0;
+      if (this.$treeButton.is(":visible")) visibleTabs++;
+      if (this.$thumbsButton.is(":visible")) visibleTabs++;
+      if (this.$searchButton.is(":visible")) visibleTabs++;
+
+      // Only show tabs container if we have 2+ visible tabs
+      if (visibleTabs >= 2) {
+        this.$tabs.show();
+      } else {
+        this.$tabs.hide();
+      }
+
+      // Open the appropriate default view
       if (thumbsEnabled && this.defaultToThumbsView()) {
         this.openThumbsView();
       } else if (treeEnabled) {
@@ -683,6 +832,8 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
       this.openTreeView();
     } else if (this.$thumbsButton.hasClass("on")) {
       this.openThumbsView();
+    } else if (this.$searchButton.hasClass("on")) {
+      this.openSearchView();
     }
 
     this.extensionHost.publish(IIIFEvents.LEFTPANEL_EXPAND_FULL_FINISH);
@@ -702,6 +853,8 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
     // replace thumbsView with galleryView.
     if (this.$thumbsButton.hasClass("on")) {
       this.openThumbsView();
+    } else if (this.$searchButton.hasClass("on")) {
+      this.openSearchView();
     }
 
     this.extensionHost.publish(IIIFEvents.LEFTPANEL_COLLAPSE_FULL_FINISH);
@@ -710,6 +863,7 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
   openTreeView(): void {
     this.isTreeViewOpen = true;
     this.isThumbsViewOpen = false;
+    this.isSearchViewOpen = false;
 
     if (!this.treeView) {
       this.createTreeView();
@@ -717,12 +871,15 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
 
     this.$treeButton.addClass("on");
     this.$thumbsButton.removeClass("on");
+    this.$searchButton.removeClass("on");
 
     this.treeView.show();
 
     if (this.$thumbsView) this.$thumbsView.hide();
     if (this.galleryView) this.galleryView.hide();
+    if (this.searchResultsView) this.searchResultsView.hide();
 
+    this.$options.show(); // Show options for tree view
     this.updateTreeViewOptions();
 
     this.selectCurrentTreeNode();
@@ -736,6 +893,7 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
   openThumbsView(): void {
     this.isTreeViewOpen = false;
     this.isThumbsViewOpen = true;
+    this.isSearchViewOpen = false;
 
     // if (!this.$thumbsView) {
     this.createThumbsRoot();
@@ -747,11 +905,14 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
 
     this.$treeButton.removeClass("on");
     this.$thumbsButton.addClass("on");
+    this.$searchButton.removeClass("on");
 
     if (this.treeView) this.treeView.hide();
+    if (this.searchResultsView) this.searchResultsView.hide();
 
     this.$treeSelect.hide();
     this.$treeViewOptions.hide();
+    this.$options.hide(); // Hide options for thumbs view too
 
     this.resize();
 
@@ -768,6 +929,34 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
     }
 
     this.extensionHost.publish(IIIFEvents.OPEN_THUMBS_VIEW);
+  }
+
+  openSearchView(): void {
+    this.isTreeViewOpen = false;
+    this.isThumbsViewOpen = false;
+    this.isSearchViewOpen = true;
+
+    if (!this.searchResultsView) {
+      this.createSearchResultsView();
+    }
+
+    this.$treeButton.removeClass("on");
+    this.$thumbsButton.removeClass("on");
+    this.$searchButton.addClass("on");
+
+    if (this.treeView) this.treeView.hide();
+    if (this.$thumbsView) this.$thumbsView.hide();
+    if (this.galleryView) this.galleryView.hide();
+
+    this.$treeSelect.hide();
+    this.$treeViewOptions.hide();
+    this.$options.hide(); // Hide the entire options container for search view
+
+    this.searchResultsView.show();
+
+    this.resize();
+
+    this.extensionHost.publish(IIIFEvents.OPEN_SEARCH_VIEW);
   }
 
   selectTopRangeIndex(index: number): void {
@@ -894,7 +1083,8 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
       );
 
       this.$views.height(
-        this.$tabsContent.height() - this.$options.outerHeight()
+        this.$tabsContent.height() -
+          (isVisible(this.$options) ? this.$options.outerHeight() : 0)
       );
     }, 1);
   }

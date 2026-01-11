@@ -139,6 +139,130 @@
           }
         }
       }
+
+      .searchView {
+        overflow: auto;
+        color: @text-color;
+        height: 100%;
+
+        .searchHitsContainer {
+          margin: 0;
+          width: calc(100% - 20px);
+          display: flex;
+
+          .searchHitsLabel {
+            flex: 1;
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+          }
+        }
+
+        .searchPagerContainer {
+          margin: 0;
+          width: calc(100% - 20px);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          button {
+            background-color: @gray;
+            width: 20px;
+            height: 20px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+
+            &.prev::before,
+            &.next::before {
+              content: "";
+              position: absolute;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 0;
+              height: 0;
+              border-top: 5px solid transparent;
+              border-bottom: 5px solid transparent;
+            }
+
+            &.prev::before {
+              border-right: 5px solid white;
+            }
+
+            &.next::before {
+              border-left: 5px solid white;
+            }
+
+            &:hover {
+              background-color: @gray-dark;
+            }
+
+            &:disabled {
+              cursor: not-allowed;
+              pointer-events: none;
+              opacity: 0.65;
+              box-shadow: none;
+            }
+          }
+
+          span {
+            margin: 0 20px;
+            display: inline-flex;
+            align-items: center;
+          }
+        }
+
+        .canvasTitle {
+          color: #9a9a9a;
+          border-bottom: 1px solid #343434;
+          margin: 0 10px 10px 10px;
+          width: calc(100% - 20px);
+        }
+
+        .searchResult {
+          height: auto;
+          width: auto;
+          margin: 0;
+
+          .searchHit {
+            margin: 10px 0;
+            padding: 5px;
+            border: 2px solid @panel-dark-bg;
+            cursor: pointer;
+
+            &:focus {
+              outline: 2px solid @link-color;
+              outline-offset: 2px;
+            }
+
+            &.current {
+              border: 2px solid white;
+
+              .searchHitSpan {
+                background-color: #11d4ff;
+                color: #000;
+              }
+            }
+
+            .searchHitSpan {
+              font-weight: bold;
+              background-color: #10819a;
+              padding: 3px;
+            }
+
+            .searchHitNumberSpan {
+              border: none;
+              color: #fff;
+              margin: 0 0 5px;
+              display: block;
+              font-size: 12px;
+            }
+          }
+        }
+      }
     }
   }
 }
