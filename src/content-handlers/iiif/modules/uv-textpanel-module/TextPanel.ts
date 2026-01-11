@@ -25,10 +25,6 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
   $copyButton: JQuery;
   $copiedText: JQuery;
   $main: JQuery;
-  $controlsContainer: JQuery;
-  $increaseFontButton: JQuery;
-  $decreaseFontButton: JQuery;
-  $lightModeButton: JQuery;
   currentCanvasIndex: number = 0;
   currentHitIndex: number = 1;
   currentRectIndex: number = 0;
