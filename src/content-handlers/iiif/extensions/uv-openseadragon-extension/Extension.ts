@@ -56,7 +56,6 @@ import defaultConfig from "./config/config.json";
 import { Config } from "./config/Config";
 import { AdjustImageDialogue } from "../../modules/uv-dialogues-module/AdjustImageDialogue";
 import { TextPanel } from "../../modules/uv-textpanel-module/TextPanel";
-import { SearchLeftPanel } from "../../modules/uv-searchleftpanel-module/SearchLeftPanel";
 import { SearchHit } from "../../modules/uv-shared-module/SearchHit";
 
 export default class OpenSeadragonExtension extends BaseExtension<Config> {
@@ -77,7 +76,6 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
   adjustImageDialogue: AdjustImageDialogue;
   isAnnotating: boolean = false;
   leftPanel: ContentLeftPanel;
-  searchLeftPanel: SearchLeftPanel;
   mobileFooterPanel: MobileFooterPanel;
   mode: Mode;
   multiSelectDialogue: MultiSelectDialogue;
@@ -197,7 +195,6 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
       () => {
         if (this.isDesktopMetric()) {
           this.shell.$rightPanel.show();
-          this.shell.$searchLeftPanel.show();
         }
       }
     );
@@ -213,7 +210,6 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
     this.extensionHost.subscribe(IIIFEvents.LEFTPANEL_EXPAND_FULL_START, () => {
       this.shell.$centerPanel.hide();
       this.shell.$rightPanel.hide();
-      this.shell.$searchLeftPanel.hide();
     });
 
     this.extensionHost.subscribe(IIIFEvents.MINUS, () => {
@@ -534,12 +530,6 @@ export default class OpenSeadragonExtension extends BaseExtension<Config> {
       this.leftPanel = new ContentLeftPanel(this.shell.$leftPanel);
     } else {
       this.shell.$leftPanel.hide();
-    }
-
-    if (this.isSearchLeftPanelEnabled()) {
-      this.searchLeftPanel = new SearchLeftPanel(this.shell.$searchLeftPanel);
-    } else {
-      this.shell.$searchLeftPanel.hide();
     }
 
     this.centerPanel = new OpenSeadragonCenterPanel(this.shell.$centerPanel);

@@ -4,7 +4,6 @@
     "footerPanelEnabled": true,
     "headerPanelEnabled": true,
     "leftPanelEnabled": true,
-    "searchLeftPanelEnabled": true,
     "textPanelEnabled": true,
     "limitLocales": false,
     "overrideFullScreen": false,

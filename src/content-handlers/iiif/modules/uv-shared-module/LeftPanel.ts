@@ -76,26 +76,14 @@ export class LeftPanel<
 
   toggle(autoToggled?: boolean): void {
     if (this.isExpanded) {
-      if (this.$element.hasClass("searchLeftPanel")) {
-        this.$element.parent().removeClass("searchLeftPanelOpen");
-      } else {
-        this.$element.parent().removeClass("leftPanelOpen");
-      }
+      this.$element.parent().removeClass("leftPanelOpen");
     } else {
       const panelWidth = this.options.panelExpandedWidth ?? 271;
-      if (this.$element.hasClass("searchLeftPanel")) {
-        document.documentElement.style.setProperty(
-          "--uv-grid-search-left-width-open",
-          `${panelWidth}px`
-        );
-        this.$element.parent().addClass("searchLeftPanelOpen");
-      } else {
-        document.documentElement.style.setProperty(
-          "--uv-grid-left-width-open",
-          `${panelWidth}px`
-        );
-        this.$element.parent().addClass("leftPanelOpen");
-      }
+      document.documentElement.style.setProperty(
+        "--uv-grid-left-width-open",
+        `${panelWidth}px`
+      );
+      this.$element.parent().addClass("leftPanelOpen");
     }
 
     super.toggle(autoToggled);
