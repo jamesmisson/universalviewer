@@ -25,6 +25,10 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
   $copyButton: JQuery;
   $copiedText: JQuery;
   $main: JQuery;
+  $controlsContainer: JQuery;
+  $increaseFontButton: JQuery;
+  $decreaseFontButton: JQuery;
+  $lightModeButton: JQuery;
   currentCanvasIndex: number = 0;
   currentHitIndex: number = 1;
   currentRectIndex: number = 0;
@@ -33,6 +37,8 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
   index: number = 0;
   clipboardText: string = "";
   isProcessingLoad: boolean = false;
+  fontSize: number = 16;
+  isLightMode: boolean = false;
 
   constructor($element: JQuery) {
     super($element);
@@ -643,21 +649,31 @@ export class TextPanel extends BaseView<Config["modules"]["textPanel"]> {
     );
     $lineAnnotation.addClass("current");
 
-    // this is needed to stop the whole browser page from scrolling if UV is embedded
     if (scrollIntoView && $lineAnnotation.length) {
       const lineElement = $lineAnnotation[0];
       const container = this.$main[0];
 
+      // Check if element is currently visible
       const elementTop = lineElement.offsetTop;
-      const elementHeight = lineElement.offsetHeight;
-      const containerHeight = container.clientHeight;
+      const elementBottom = elementTop + lineElement.offsetHeight;
+      const containerScrollTop = container.scrollTop;
+      const containerScrollBottom = containerScrollTop + container.clientHeight;
 
-      const scrollTo = elementTop - containerHeight / 2 + elementHeight / 2;
+      const isVisible =
+        elementTop >= containerScrollTop &&
+        elementBottom <= containerScrollBottom;
 
-      container.scrollTo({
-        top: scrollTo,
-        behavior: "smooth",
-      });
+      // Only scroll if not visible
+      if (!isVisible) {
+        const elementHeight = lineElement.offsetHeight;
+        const containerHeight = container.clientHeight;
+        const scrollTo = elementTop - containerHeight / 2 + elementHeight / 2;
+
+        container.scrollTo({
+          top: scrollTo,
+          behavior: "smooth",
+        });
+      }
     }
   }
 
