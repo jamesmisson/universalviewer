@@ -113,6 +113,7 @@ export class IIIFEvents {
   static THUMB_SELECTED: string = "thumbSelected";
   static TOGGLE_EXPAND_LEFT_PANEL: string = "toggleExpandLeftPanel";
   static TOGGLE_EXPAND_RIGHT_PANEL: string = "toggleExpandRightPanel";
+  static TOGGLE_TEXT_PANEL: string = "toggleTextPanel";
   static TREE_NODE_MULTISELECTED: string = "treeNodeMultiSelected";
   static TREE_NODE_SELECTED: string = "treeNodeSelected";
   static UP_ARROW: string = "upArrow";

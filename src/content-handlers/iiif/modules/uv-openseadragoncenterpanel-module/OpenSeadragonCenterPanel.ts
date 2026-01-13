@@ -41,6 +41,7 @@ export class OpenSeadragonCenterPanel extends CenterPanel<
   $prevButton: JQuery;
   $rotateButton: JQuery;
   $twoUpButton: JQuery;
+  $textPanelButton: JQuery;
   $viewportNavButtonsContainer: JQuery;
   $viewportNavButtons: JQuery;
   $zoomInButton: JQuery;
@@ -110,6 +111,7 @@ export class OpenSeadragonCenterPanel extends CenterPanel<
         <span class="sr-only">${this.content.twoUp}</span>
       </button>
     `);
+
     this.$pagingToggleButtons.append(this.$oneUpButton, this.$twoUpButton);
     const hasPaging = (
       this.extension as OpenSeadragonExtension
@@ -161,6 +163,20 @@ export class OpenSeadragonCenterPanel extends CenterPanel<
 
     this.$galleryButton.onPressed(() => {
       this.extensionHost.publish(IIIFEvents.TOGGLE_EXPAND_LEFT_PANEL);
+    });
+
+    //todo: make proper text panel button
+    this.$textPanelButton = $(`
+      <button class="btn imageBtn one-up" title="Text Panel">
+T
+        <span class="sr-only">T</span>
+      </button>
+    `);
+
+    this.$pagingToggleButtons.append(this.$textPanelButton);
+
+    this.$textPanelButton.onPressed(() => {
+      this.extensionHost.publish(IIIFEvents.TOGGLE_TEXT_PANEL);
     });
 
     this.$navigator = $(`<div id="osd-navigator-container"></div>`);

@@ -45,7 +45,7 @@ export class OpenSeadragonBackgroundPanel extends BaseView<
   viewerId: string;
   $textPanel: JQuery;
   $resizeHandle: JQuery;
-  isTextPanelEnabled: boolean = false;
+  isTextPanelEnabled: boolean;
 
   $canvas: JQuery;
   $spinner: JQuery;
@@ -177,6 +177,18 @@ export class OpenSeadragonBackgroundPanel extends BaseView<
         });
       }
     );
+
+    this.extensionHost.subscribe(IIIFEvents.TOGGLE_TEXT_PANEL, () => {
+      this.isTextPanelEnabled = !this.isTextPanelEnabled;
+
+      if (this.isTextPanelEnabled) {
+        this.$element.addClass("textEnabled");
+        this.$textPanel.show();
+      } else {
+        this.$element.removeClass("textEnabled");
+        this.$textPanel.hide();
+      }
+    });
 
     this.$element.on("mousemove", (e: JQuery.MouseMoveEvent) => {
       // Forward the event to centerPanel so it can trigger controls fade-in
@@ -444,6 +456,15 @@ export class OpenSeadragonBackgroundPanel extends BaseView<
       );
     });
 
+    this.viewer.addHandler("open", () => {
+      this.updateBounds();
+
+      if (this.navigatedFromSearch) {
+        this.navigatedFromSearch = false;
+        this.zoomToInitialAnnotation();
+      }
+    });
+
     this.isCreated = true;
     //this.resize();
   }
@@ -641,12 +662,6 @@ export class OpenSeadragonBackgroundPanel extends BaseView<
 
     this.updateBounds();
 
-    // this only happens if prev/next search result were clicked and caused a reload
-    if (this.navigatedFromSearch) {
-      this.navigatedFromSearch = false;
-      this.zoomToInitialAnnotation();
-    }
-
     this.isFirstLoad = false;
   }
 
@@ -729,6 +744,8 @@ export class OpenSeadragonBackgroundPanel extends BaseView<
         this.initialBounds = XYWHFragment.fromString(xywh);
         this.currentBounds = this.initialBounds;
         this.fitToBounds(this.currentBounds);
+      } else {
+        this.goHome();
       }
     } else if (settings.preserveViewport && this.currentBounds) {
       // if this isn't the first load and preserveViewport is enabled, fit to the current bounds.
