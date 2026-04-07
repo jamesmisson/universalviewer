@@ -45,6 +45,7 @@ export class IIIFEvents {
   static HIDE_SHARE_DIALOGUE: string = "hideShareDialogue";
   static HOME: string = "home";
   static LAST: string = "last";
+  static LAYER_OPACITY_CHANGE: string = "layerOpacityChange";
   static LEFT_ARROW: string = "leftArrow";
   static LEFTPANEL_COLLAPSE_FULL_FINISH: string = "leftPanelCollapseFullFinish";
   static LEFTPANEL_COLLAPSE_FULL_START: string = "leftPanelCollapseFullStart";

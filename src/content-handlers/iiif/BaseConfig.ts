@@ -310,7 +310,9 @@ export type AdjustImageDialogue = ModuleConfig & {
   content: AdjustImageDialogueContent;
 };
 
-type ChoiceSwitchDialogueOptions = DialogueOptions & {};
+type ChoiceSwitchDialogueOptions = DialogueOptions & {
+  layerMode: boolean;
+};
 
 type ChoiceSwitchDialogueContent = DialogueContent & {};
 

@@ -186,6 +186,15 @@ export class OpenSeadragonCenterPanel extends CenterPanel<
         });
       }
     );
+
+    this.extensionHost.subscribe(
+      IIIFEvents.LAYER_OPACITY_CHANGE,
+      ({ index, opacity }: { index: number; opacity: number }) => {
+        this.whenCreated(() => {
+          this.viewer.world.getItemAt(index)?.setOpacity(opacity);
+        });
+      }
+    );
   }
 
   whenCreated(cb: () => void): void {

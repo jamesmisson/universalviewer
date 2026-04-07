@@ -503,7 +503,8 @@
     },
     "choiceSwitchDialogue": {
       "options": {
-        "topCloseButtonEnabled": false
+        "topCloseButtonEnabled": false,
+        "layerMode": true
       },
       "content": {
         "close": "$close"

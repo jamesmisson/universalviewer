@@ -473,6 +473,57 @@
       .bottom {
         display: none;
       }
+
+      .layerItem {
+        display: block;
+        padding: 4px 0;
+        white-space: nowrap;
+
+        label {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          color: #333;
+          margin: 0;
+          font-size: 13px;
+        }
+
+        input[type="range"] {
+          -webkit-appearance: none;
+          appearance: none;
+          background: transparent;
+          cursor: pointer;
+          width: 100%;
+
+          &::-webkit-slider-runnable-track {
+            background: #333;
+            height: 4px;
+          }
+
+          &::-moz-range-track {
+            background: #333;
+            height: 4px;
+          }
+
+          &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -6px;
+            background-color: #333;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+          }
+
+          &::-moz-range-thumb {
+            border: none;
+            border-radius: 50%;
+            background-color: #333;
+            height: 14px;
+            width: 14px;
+          }
+        }
+      }
     }
   }
 

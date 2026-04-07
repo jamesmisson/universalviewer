@@ -41,21 +41,58 @@ export class ChoiceSwitchDialogue extends Dialogue<
       this.extension
     )).helper.getChoices();
 
+    const layerMode = this.options.layerMode;
+
     choices.forEach((choice, index) => {
       const label = choice.getLabel().getValue() ?? `Choice ${index + 1}`;
       const isActive =
         index === (<OpenSeadragonExtension>this.extension).helper.choiceIndex;
 
-      const $item = $(`
+      let $item: JQuery;
+
+      if (layerMode) {
+        // opacity slider per layer
+        const currentOpacity =
+          (<OpenSeadragonExtension>this.extension).centerPanel.viewer.world
+            .getItemAt(index)
+            ?.getOpacity() ?? (isActive ? 1 : 0);
+
+        $item = $(`
+        <div class="choiceItem layerItem">
+          <label>
+            ${label}
+            <input 
+              type="range" 
+              min="0" 
+              max="100" 
+              step="1" 
+              value="${Math.round(currentOpacity * 100)}" 
+            />
+          </label>
+        </div>
+      `);
+
+        $item.find("input[type='range']").on("input", (e) => {
+          const opacity = Number($(e.target).val()) / 100;
+          this.extensionHost.publish(IIIFEvents.LAYER_OPACITY_CHANGE, {
+            index,
+            opacity,
+          });
+        });
+      } else {
+        // radio button
+        $item = $(`
         <label class="choiceItem">
           <input type="radio" name="choice" value="${index}" ${isActive ? "checked" : ""} />
           ${label}
         </label>
       `);
 
-      $item.find("input").on("change", () => {
-        this.extensionHost.publish(IIIFEvents.CHOICE_CHANGE, index);
-      });
+        $item.find("input").on("change", () => {
+          this.extensionHost.publish(IIIFEvents.CHOICE_CHANGE, index);
+          this.close();
+        });
+      }
 
       this.$choiceList.append($item);
     });
