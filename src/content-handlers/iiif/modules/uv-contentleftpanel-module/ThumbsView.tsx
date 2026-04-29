@@ -13,6 +13,7 @@ const ThumbImage = ({
   thumb,
   truncateThumbnailLabels,
   viewingDirection,
+  hasChoices,
 }: {
   first: boolean;
   onClick: (thumb: Thumb) => void;
@@ -22,6 +23,7 @@ const ThumbImage = ({
   thumb: Thumb;
   truncateThumbnailLabels: boolean;
   viewingDirection: ViewingDirection;
+  hasChoices: Boolean;
 }) => {
   const [ref, inView] = useInView({
     threshold: 0,
@@ -63,6 +65,7 @@ const ThumbImage = ({
         }}
       >
         {inView && <img src={thumb.uri} alt={thumb.label} />}
+        {hasChoices && <div className="choiceIndicator" />}
       </div>
       <div className="info">
         <span className="label" title={thumb.label}>
@@ -157,6 +160,7 @@ const Thumbnails = ({
             thumb={thumb}
             truncateThumbnailLabels={truncateThumbnailLabels}
             viewingDirection={viewingDirection}
+            hasChoices={!!thumb.data.hasChoices}
           />
           {showSeparator(paged, thumb.viewingHint, index) && (
             <div className="separator"></div>

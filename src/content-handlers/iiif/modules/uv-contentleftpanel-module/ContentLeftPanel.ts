@@ -508,6 +508,17 @@ export class ContentLeftPanel extends LeftPanel<ContentLeftPanelConfig> {
       }
     }
 
+    // add a layers icon for canvases with layers
+    for (let i = 0; i < thumbs.length; i++) {
+      const thumb = thumbs[i];
+      const canvas = this.extension.helper.getCanvasByIndex(thumb.index);
+      if (canvas.getChoices().length > 0) {
+        const data = Object.assign({}, thumb.data);
+        data.hasChoices = true;
+        thumb.data = data;
+      }
+    }
+
     const paged: boolean =
       !!this.extension.getSettings().pagingEnabled &&
       this.extension.helper.isPaged();
