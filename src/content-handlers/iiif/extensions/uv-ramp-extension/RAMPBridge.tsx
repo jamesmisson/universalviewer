@@ -1,19 +1,26 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { IIIFPlayer, MediaPlayer, StructuredNavigation } from "@samvera/ramp";
+import {
+  IIIFPlayer,
+  MediaPlayer,
+  StructuredNavigation,
+  Transcript,
+} from "@samvera/ramp";
 import { UVSyncBridge } from "./UVSyncBridge";
 
 interface RAMPBridgeProps {
   manifestUrl: string;
   centerPanelEl: HTMLElement | null;
-  leftPanelEl: HTMLElement | null;
+  navEl: HTMLElement | null;
+  transcriptEl: HTMLElement | null;
   extensionHost: any;
 }
 
 export function RAMPBridge({
   manifestUrl,
   centerPanelEl,
-  leftPanelEl,
+  navEl,
+  transcriptEl,
   extensionHost,
 }: RAMPBridgeProps) {
   return (
@@ -22,10 +29,21 @@ export function RAMPBridge({
       <UVSyncBridge extensionHost={extensionHost} />
 
       {/* MediaPlayer portals into the center panel content area */}
-      {centerPanelEl && createPortal(<MediaPlayer />, centerPanelEl)}
+      {centerPanelEl &&
+        createPortal(
+          <div className="ramp-player-scope">
+            <MediaPlayer />
+          </div>,
+          centerPanelEl
+        )}
 
-      {/* StructuredNavigation portals into the left panel content area */}
-      {leftPanelEl && createPortal(<StructuredNavigation />, leftPanelEl)}
+      {navEl && createPortal(<StructuredNavigation />, navEl)}
+
+      {transcriptEl &&
+        createPortal(
+          <Transcript playerID="ramp-player" manifestUrl={manifestUrl} />,
+          transcriptEl
+        )}
     </IIIFPlayer>
   );
 }

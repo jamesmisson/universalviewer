@@ -1,7 +1,6 @@
 import { CenterPanel } from "../uv-shared-module/CenterPanel";
 import { IIIFEvents } from "../../IIIFEvents";
 import { Config } from "../../extensions/uv-ramp-extension/config/Config";
-
 export class RAMPCenterPanel extends CenterPanel<
   Config["modules"]["avCenterPanel"]
 > {

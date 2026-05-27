@@ -1,6 +1,6 @@
 @import "../../../modules/uv-dialogues-module/css/styles.less";
 @import "../../../modules/uv-avcenterpanel-module/css/styles.less";
-@import "../../../modules/uv-contentleftpanel-module/css/styles.less";
+@import "../../../modules/uv-rampleftpanel-module/css/styles.less";
 @import "../../../modules/uv-moreinforightpanel-module/css/styles.less";
 @import "../../../modules/uv-shared-module/css/styles.less";
 @import "../../../modules/uv-avmobilefooterpanel-module/css/styles.less";
@@ -11,6 +11,23 @@
 
 // Override RAMP StructuredNavigation to match UV tree component
 .uv {
+  .centerPanel {
+    .content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ramp-player-scope {
+      @import (less)
+        "../../../../../../node_modules/@samvera/ramp/dist/ramp.css";
+    }
+
+    .ramp-player-scope {
+      width: 100%;
+    }
+  }
+
   .ramp--structured-nav__border {
     height: 100%;
     overflow: auto;

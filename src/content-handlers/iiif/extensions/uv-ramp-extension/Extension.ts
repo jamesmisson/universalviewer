@@ -1,7 +1,7 @@
 import { RAMPCenterPanel } from "../../modules/uv-rampcenterpanel-module/RAMPCenterPanel";
 import { IIIFEvents } from "../../IIIFEvents";
 import { BaseExtension } from "../../modules/uv-shared-module/BaseExtension";
-import { LeftPanel } from "../../modules/uv-shared-module/LeftPanel";
+// import { LeftPanel } from "../../modules/uv-shared-module/LeftPanel";
 import { FooterPanel } from "../../modules/uv-shared-module/FooterPanel";
 import { FooterPanel as MobileFooterPanel } from "../../modules/uv-avmobilefooterpanel-module/MobileFooter";
 import { HeaderPanel } from "../../modules/uv-shared-module/HeaderPanel";
@@ -16,9 +16,10 @@ import { createRoot, Root } from "react-dom/client";
 import { createElement } from "react";
 import { RAMPBridge } from "./RAMPBridge";
 import "./theme/theme.less";
-import "@samvera/ramp/dist/ramp.css";
+// import "@samvera/ramp/dist/ramp.css";
 import defaultConfig from "./config/config.json";
 import { Config } from "./config/Config";
+import { RAMPLeftPanel } from "../../modules/uv-rampleftpanel-module/RAMPLeftPanel";
 
 export default class Extension
   extends BaseExtension<Config>
@@ -29,7 +30,7 @@ export default class Extension
   centerPanel: RAMPCenterPanel;
   footerPanel: FooterPanel<Config["modules"]["footerPanel"]>;
   headerPanel: HeaderPanel<Config["modules"]["headerPanel"]>;
-  leftPanel: LeftPanel<Config["modules"]["leftPanel"]>;
+  leftPanel: RAMPLeftPanel;
   mobileFooterPanel: MobileFooterPanel;
   rightPanel: MoreInfoRightPanel;
   settingsDialogue: SettingsDialogue;
@@ -75,14 +76,6 @@ export default class Extension
     const manifestUrl = this.helper.manifestUri;
     if (!manifestUrl) return;
 
-    // Get the content areas of each panel as portal targets.
-    // We look for .content first (created by BaseExpandPanel),
-    // falling back to the panel root itself.
-    const $leftContent = this.shell.$leftPanel.find(".main");
-    const leftPanelEl = (
-      $leftContent.length ? $leftContent : this.shell.$leftPanel
-    )[0];
-
     const $centerContent = this.shell.$centerPanel.find(".content");
     const centerPanelEl = (
       $centerContent.length ? $centerContent : this.shell.$centerPanel
@@ -102,7 +95,8 @@ export default class Extension
       createElement(RAMPBridge, {
         manifestUrl,
         centerPanelEl,
-        leftPanelEl,
+        navEl: this.leftPanel.$navContent[0],
+        transcriptEl: this.leftPanel.$transcriptContent[0],
         extensionHost: this.extensionHost,
       })
     );
@@ -118,10 +112,9 @@ export default class Extension
     }
 
     if (this.isLeftPanelEnabled()) {
-      this.leftPanel = new LeftPanel(this.shell.$leftPanel);
+      this.leftPanel = new RAMPLeftPanel(this.shell.$leftPanel);
     }
 
-    // RAMPCenterPanel is now just a thin UV panel — no React inside it
     this.centerPanel = new RAMPCenterPanel(this.shell.$centerPanel);
 
     if (this.isRightPanelEnabled()) {
