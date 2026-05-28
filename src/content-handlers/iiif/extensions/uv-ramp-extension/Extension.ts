@@ -1,7 +1,6 @@
 import { RAMPCenterPanel } from "../../modules/uv-rampcenterpanel-module/RAMPCenterPanel";
 import { IIIFEvents } from "../../IIIFEvents";
 import { BaseExtension } from "../../modules/uv-shared-module/BaseExtension";
-// import { LeftPanel } from "../../modules/uv-shared-module/LeftPanel";
 import { FooterPanel } from "../../modules/uv-shared-module/FooterPanel";
 import { FooterPanel as MobileFooterPanel } from "../../modules/uv-avmobilefooterpanel-module/MobileFooter";
 import { HeaderPanel } from "../../modules/uv-shared-module/HeaderPanel";
@@ -81,8 +80,6 @@ export default class Extension
       $centerContent.length ? $centerContent : this.shell.$centerPanel
     )[0];
 
-    // Create a mount point for the React root itself —
-    // this is just a coordination node, it renders nothing directly
     if (!this._reactRoot) {
       const mountPoint = document.createElement("div");
       mountPoint.className = "ramp-root";
