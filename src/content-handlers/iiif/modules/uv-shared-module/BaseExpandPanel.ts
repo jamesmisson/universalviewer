@@ -2,6 +2,7 @@ const $ = require("jquery");
 import { Bools } from "../../Utils";
 import { ExpandPanel } from "../../extensions/config/ExpandPanel";
 import { BaseView } from "./BaseView";
+import { IIIFEvents } from "../../IIIFEvents";
 
 export class BaseExpandPanel<T extends ExpandPanel> extends BaseView<T> {
   isExpanded: boolean = false;
@@ -124,6 +125,8 @@ export class BaseExpandPanel<T extends ExpandPanel> extends BaseView<T> {
 
     this.$element.toggleClass("open");
 
+    this.extensionHost.publish(IIIFEvents.TOGGLE_PANEL);
+
     if (this.isExpanded) {
       this.$top.attr("aria-hidden", "true");
       this.$main.attr("aria-hidden", "true");
@@ -186,6 +189,8 @@ export class BaseExpandPanel<T extends ExpandPanel> extends BaseView<T> {
       );
     }
 
+    this.extensionHost.publish(IIIFEvents.TOGGLE_PANEL);
+
     this.expandFullStart();
 
     let timeout = 0;
@@ -229,6 +234,8 @@ export class BaseExpandPanel<T extends ExpandPanel> extends BaseView<T> {
         `${this.options.panelAnimationDuration * 2}ms`
       );
     }
+
+    this.extensionHost.publish(IIIFEvents.TOGGLE_PANEL);
 
     this.collapseFullStart();
 
